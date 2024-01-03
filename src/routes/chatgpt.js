@@ -7,14 +7,13 @@ const openai = new OpenAI({
 });
 
 app.post('/chatgpt/chat', async (req, res) => {
-    console.log('apiKey: ', process.env.OPENAI_API_KEY);
     const data = req.body;
     const response = await openai.chat.completions.create({
         model: "gpt-3.5-turbo",
         messages: [
             {
                 role: 'system',
-                content: 'Tu eres un buen asistente de negocios.'
+                content: 'Tu eres un buen asistente de ' + data.specialty + '.'
             },
             {
                 role: 'user',
