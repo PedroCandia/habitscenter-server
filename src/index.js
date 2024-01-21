@@ -5,6 +5,7 @@ const cors = require('cors');
 const app = express();
 
 const ChatGPT = require('./routes/chatgpt');
+const auth = require('./routes/auth');
 
 // settings
 app.set('appName', 'doStock')
@@ -16,7 +17,8 @@ app.use(express.json());
 app.use(morgan('dev'));
 app.use(cors());
 
-app.use(ChatGPT);
+app.use('/gpt', ChatGPT);
+app.use('/auth', auth);
 
 // routes
 app.get('/', (req, res) => {
