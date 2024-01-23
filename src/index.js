@@ -5,9 +5,10 @@ const cors = require('cors');
 const app = express();
 
 const ChatGPT = require('./routes/chatgpt');
+const auth = require('./routes/auth');
 
 // settings
-app.set('appName', 'doStock')
+app.set('appName', 'HabitsCenter AI');
 app.set('port', 3000);
 app.set('case sensitive routing', true);
 
@@ -16,12 +17,13 @@ app.use(express.json());
 app.use(morgan('dev'));
 app.use(cors());
 
-app.use(ChatGPT);
-
 // routes
 app.get('/', (req, res) => {
-    res.end('Hello world');
+    res.send('Hello world');
 });
+
+app.use('/gpt', ChatGPT);
+app.use('/auth', auth);
 
 app.use((req, res) => {
     res.send('No se encontro una ruta');
