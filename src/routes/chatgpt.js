@@ -34,6 +34,21 @@ app.post('/chat', async (req, res) => {
         }
 
     */
+    const response = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [
+            {
+                role: 'system',
+                content: 'Tu eres un buen asistente de ' + data.specialty + '.'
+            },
+            {
+                role: 'user',
+                content: data.message
+            }
+        ],
+        temperature: 0,
+        max_tokens: 256,
+    });
 
         
     //! 1. LLamar a la base de datos para ver si el usuario ya thread con el bot
@@ -50,27 +65,27 @@ app.post('/chat', async (req, res) => {
     //! Obtener los nuevos mensajes y enviarlos al frontend
 
     // Se ocupa crear threads 8 por usuario (1 para cada bot)
-    const thread = await openai.beta.threads.create();
+    // const thread = await openai.beta.threads.create();
 
-    const message = await openai.beta.threads.messages.create(
-        thread.id,
-        {
-          role: "user",
-          content: data.message
-        }
-    );
+    // const message = await openai.beta.threads.messages.create(
+    //     thread.id,
+    //     {
+    //       role: "user",
+    //       content: data.message
+    //     }
+    // );
 
-    const run = await openai.beta.threads.runs.create(
-        thread.id,
-        { 
-          assistant_id: assistans[data.assistantID],
+    // const run = await openai.beta.threads.runs.create(
+    //     thread.id,
+    //     { 
+    //       assistant_id: assistans[data.assistantID],
         //   instructions: "Please address the user as Jane Doe. The user has a premium account."
-        }
-    );
+    //     }
+    // );
     
-    const messages = await openai.beta.threads.messages.list(
-        thread.id
-    );
+    // const messages = await openai.beta.threads.messages.list(
+    //     thread.id
+    // );
 
     // messages.body.data.forEach
     
@@ -90,7 +105,8 @@ app.post('/chat', async (req, res) => {
     //     max_tokens: 256,
     // });
 
-    res.status(200).json(messages);
+    res.status(200).json(response);
+    // res.status(200).json(messages);
 });
 
 module.exports = app;
