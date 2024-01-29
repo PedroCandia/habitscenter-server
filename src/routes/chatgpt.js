@@ -34,9 +34,10 @@ app.post('/chat', async (req, res) => {
 
     let threadID;
     const threadExists = data.length >= 1;
+    console.log(data);
     if(threadExists && data[0] && data[0]?.thread) {
         // Si existe el thread significa que el usuario ya interactuo con el bot
-        threadID = data[0].thread;
+        threadID = data[0]?.thread;
     } else {
         // Si no existe el thread significa que es su primer mensaje del usuario con este bot
         const thread = await openai.beta.threads.create();
@@ -100,7 +101,7 @@ app.post('/getAllMessages', async (req, res) => {
     
     const supabase = await authSvc.createClient();
     const { data, error } = await supabase.from('assistants').select('thread').eq('id', id).eq('bot', assistantId);
-    const thread_id = data[0].thread;
+    const thread_id = data[0]?.thread;
 
     const numberOfMessages = 15;
     let messages = await openai.beta.threads.messages.list(thread_id);
