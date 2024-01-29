@@ -34,7 +34,7 @@ app.post('/chat', async (req, res) => {
 
     let threadID;
     const threadExists = data.length >= 1;
-    if(threadExists && data[0] && data[0].thread) {
+    if(threadExists && data[0] && data[0]?.thread) {
         // Si existe el thread significa que el usuario ya interactuo con el bot
         threadID = data[0].thread;
     } else {
