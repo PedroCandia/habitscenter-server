@@ -1,6 +1,8 @@
 const { Router } = require('express');
 const app = Router();
 const OpenAI = require('openai');
+const authSvc = require('../services/auth.js');
+const auxFns = require('../services/auxFns.js');
 
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
@@ -24,140 +26,92 @@ const assistans = {
 
 app.post('/chat', async (req, res) => {
     // [0] asst_5bkJFTvr5adbPaMBTTYlwK4C
-    const data = req.body;
-    /*
-    
-        data = {
-            userID: ''
-            message: '',
-            assistantID: 0,
+    const requestData = req.body;
+    const assistantID = assistans[requestData.specialty];
+
+    const supabase = await authSvc.createClient();
+    const { data, error } = await supabase.from('assistants').select('thread').eq('id', requestData.id).eq('bot', assistantID);
+
+    let threadID;
+    const threadExists = data.length >= 1;
+    if(threadExists) {
+        // Si existe el thread significa que el usuario ya interactuo con el bot
+        threadID = data[0].thread;
+    } else {
+        // Si no existe el thread significa que es su primer mensaje del usuario con este bot
+        const thread = await openai.beta.threads.create();
+        const { data, error } = await supabase.from('assistants').insert({
+            id: requestData.id,
+            bot: assistantID,
+            thread: thread.id
+        });
+        threadID = thread.id;
+    }
+
+    //Step 3: Add a Message to a Thread
+    const message = await openai.beta.threads.messages.create(
+        threadID,
+        {
+            role: "user",
+            content: requestData.message
         }
+    );
 
-    */
-    const response = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
-        messages: [
-            {
-                role: 'system',
-                content: 'Tu eres un buen asistente de ' + data.specialty + '.'
-            },
-            {
-                role: 'user',
-                content: data.message
-            }
-        ],
-        temperature: 0,
-        max_tokens: 256,
-    });
-
-        
-    //! 1. LLamar a la base de datos para ver si el usuario ya thread con el bot
-    //     En caso de que no, se ocupa crear uno
-
-    //! 2. Crear un mensaje en el thread con el data.msg
-    // Ya tendriamos el botID, el theadID
-
-    //! 3. Hacer el run (recordar que este se queda en status queue)
-    // runID
-
-    //! Verficar cada cierto tiempo hasta que el runID status sea completed
-
-    //! Obtener los nuevos mensajes y enviarlos al frontend
-
-    // Se ocupa crear threads 8 por usuario (1 para cada bot)
-    // const thread = await openai.beta.threads.create();
-
-    // const message = await openai.beta.threads.messages.create(
-    //     thread.id,
-    //     {
-    //       role: "user",
-    //       content: data.message
-    //     }
-    // );
-
-    // const run = await openai.beta.threads.runs.create(
-    //     thread.id,
-    //     { 
-    //       assistant_id: assistans[data.assistantID],
+    const run = await openai.beta.threads.runs.create(
+        threadID,
+        { 
+            assistant_id: assistantID,
         //   instructions: "Please address the user as Jane Doe. The user has a premium account."
-    //     }
-    // );
-    
-    // const messages = await openai.beta.threads.messages.list(
-    //     thread.id
-    // );
+        }
+    );
 
-    // messages.body.data.forEach
-    
-    // const response = await openai.chat.completions.create({
-    //     model: "gpt-3.5-turbo",
-    //     messages: [
-    //         {
-    //             role: 'system',
-    //             content: 'Tu eres un buen asistente de ' + data.specialty + '.'
-    //         },
-    //         {
-    //             role: 'user',
-    //             content: data.message
-    //         }
-    //     ],
-    //     temperature: 0,
-    //     max_tokens: 256,
-    // });
+    if(run.status === 'queued') {
+        await waitForRunCompletion(threadID, run);
+    }
 
-    res.status(200).json(response);
-    // res.status(200).json(messages);
+    const messages = await openai.beta.threads.messages.list(threadID);
+    // console.log('Final Message: ', messages.data[0]?.content);
+    const finalMsg = messages.data[0]?.content[0]?.text?.value;
+
+    res.status(200).json(finalMsg);
+});
+
+async function waitForRunCompletion(threadId, runData) {
+    const pollingInterval = 3000; // Intervalo de 30 segundos (ajusta según tus necesidades)
+    let runStatus = runData.status;
+  
+    while (runStatus !== 'completed') {
+        const run = await openai.beta.threads.runs.retrieve(threadId, runData.id);
+        runStatus = run.status;
+    
+        if (runStatus === 'completed') {
+            console.log('El Run ha sido completado.');
+            return true;
+        } else {
+            console.log(`Estado del Run: ${runStatus}. Esperando ${pollingInterval / 1000} segundos antes de la siguiente verificación.`);
+            await auxFns.sleep(pollingInterval);
+        }
+    }
+}
+
+app.post('/getAllMessages', async (req, res) => {
+    const { id, specialty } = req.body;
+    const assistantId = assistans[specialty];
+    
+    const supabase = await authSvc.createClient();
+    const { data, error } = await supabase.from('assistants').select('thread').eq('id', id).eq('bot', assistantId);
+    const thread_id = data[0].thread;
+
+    const numberOfMessages = 15;
+    let messages = await openai.beta.threads.messages.list(thread_id);
+    messages = messages.body.data.slice(0, numberOfMessages);
+    messages = messages.map(message => ({
+        role: message.role,
+        content: message.content
+    }));
+    console.log('Final messages: ', messages);
+
+    res.status(200).json(messages);
 });
 
 module.exports = app;
-
-/*
-
-    En caso de que un usuario quiera agregar su propio asistente (PREMIUM)
-
-    const assistant = await openai.beta.assistants.create({
-    name: "Math Tutor",
-    instructions: "You are a personal math tutor. Write and run code to answer math questions.",
-    tools: [{ type: "code_interpreter" }],
-    model: "gpt-4-1106-preview"
-    });
-
-    fetch an existin assistant
-
-    const assistant = await openai.beta.assistants.retrieve(
-        'asst_5bkJFTvr5adbPaMBTTYlwK4C'
-    );
-
-    Crear un hilo
-    const thread = await openai.beta.threads.create();
-
-    Crear un msg
-    const message = await openai.beta.threads.messages.create(
-        thread.id,
-        {
-          role: "user",
-          content: data.message
-        }
-    );
-
-    run assistants //! Importante que la respuesta de run puede estar en status queue
-     const run = await openai.beta.threads.runs.create(
-        thread.id,
-        { 
-          assistant_id: assistans[data.assistantID],
-          instructions: "Please address the user as Jane Doe. The user has a premium account."
-        }
-    );
-
-    a //! para verificar el status es con
-    const run = await openai.beta.threads.runs.retrieve(
-        thread.id,
-        run.id
-    );
-
-    a //! una vez que el status es completed con el pasado run
-    a //! obtenemos los mensajes
-    const messages = await openai.beta.threads.messages.list(
-        thread.id
-    );
-*/
