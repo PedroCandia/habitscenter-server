@@ -101,10 +101,21 @@ app.post('/getAllMessages', async (req, res) => {
     
     const supabase = await authSvc.createClient();
     const { data, error } = await supabase.from('assistants').select('thread').eq('id', id).eq('bot', assistantId);
+    let messages = [];
+    if(data.length < 1) {
+        res.status(200).json(messages);
+        return;
+    }
     const thread_id = data[0]?.thread;
 
     const numberOfMessages = 15;
-    let messages = await openai.beta.threads.messages.list(thread_id);
+    try {
+        messages = await openai.beta.threads.messages.list(thread_id);   
+    } catch (error) {
+        res.status(200).json(messages);
+        console.log('Error openai list: ', error);
+        return;
+    }
     messages = messages.body.data.slice(0, numberOfMessages);
     messages = messages.map(message => ({
         role: message.role,
