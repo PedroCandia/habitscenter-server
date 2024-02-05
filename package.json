@@ -13,6 +13,7 @@
   "main": "index.js",
   "devDependencies": {},
   "scripts": {
+    "command": "npm run dev",
     "dev": "nodemon src/index.js"
   },
   "repository": {
