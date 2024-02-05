@@ -5,6 +5,7 @@ const cors = require('cors');
 const app = express();
 
 const ChatGPT = require('./routes/chatgpt');
+const supabase = require('./routes/supabase');
 
 // settings
 app.set('appName', 'HabitsCenter AI');
@@ -22,6 +23,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/gpt', ChatGPT);
+app.use('/auth', supabase);
 
 app.use((req, res) => {
     res.send('No se encontro una ruta');
