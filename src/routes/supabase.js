@@ -3,11 +3,12 @@ const app = Router();
 const authSvc = require('../services/auth.js');
 
 app.post('/createAccount', async (req, res) => {
-    const { id } = req.body;
+    const { id, email } = req.body;
     const supabase = await authSvc.createClient();
 
     const { data, error } = await supabase.from('users').insert({
         id: id,
+        email: email,
         rubys: 3
     });
 
