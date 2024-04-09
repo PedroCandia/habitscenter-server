@@ -23,7 +23,7 @@ app.post('/addRuby', async (req, res) => {
     let newRubys;
     if(data && data[0]) {
         const currentRubys = data[0]?.rubys;
-        newRubys = currentRubys + 1;
+        newRubys = currentRubys + 2;
 
         await supabase.from('users').update({ rubys: newRubys }).eq('id', id);
     }
