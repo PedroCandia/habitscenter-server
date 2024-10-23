@@ -35,7 +35,7 @@ app.post('/chat', async (req, res) => {
     const { data, error } = await supabase.from('assistants').select('thread').eq('id', requestData.id).eq('bot', assistantID);
 
     let threadID;
-    const threadExists = data.length >= 1 && data[0] && data[0]?.thread;
+    const threadExists = (data) && (data?.length >= 1 && data[0] && data[0]?.thread);
     if(threadExists) {
         // Si existe el thread significa que el usuario ya interactuo con el bot
         threadID = data[0]?.thread;
@@ -46,7 +46,7 @@ app.post('/chat', async (req, res) => {
             id: requestData.id,
             bot: assistantID,
             thread: thread.id
-        });
+        });        
         threadID = thread.id;
     }
 
@@ -103,7 +103,7 @@ app.post('/getAllMessages', async (req, res) => {
     const supabase = await authSvc.createClient();
     const { data, error } = await supabase.from('assistants').select('thread').eq('id', id).eq('bot', assistantId);
     let messages = [];
-    if(data.length < 1) {
+    if(!data || data?.length < 1) {
         res.status(200).json(messages);
         return;
     }
