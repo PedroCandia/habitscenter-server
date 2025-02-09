@@ -10,20 +10,8 @@ const openai = new OpenAI({
 
 const assistans = {
     'Salud Mental': 'asst_5bkJFTvr5adbPaMBTTYlwK4C',
-    'Desarrollo personal': 'asst_6cQixAu9XPPjElHGHQ5iIIdT',
-    'Alimentación': 'asst_MxtQbPChRBFs5cVGwUY9Jd7R',
-    'Ejercicio': 'asst_MmfyeWQ0kfxWIw7hFpIQuwvc',
-    'Sueño': 'asst_P00RbTXkPpldt8nF7FJVT8RN',
-    'Relaciones sociales': 'asst_HBvn0eoKjKLvQ7Fvume7OWCY',
-    'Gestión del tiempo': 'asst_NGrdYQdq0myhrZx5AP8W5zq6',
-    'Gestión del estrés': 'asst_KBvOpcm5hbZ67zbAm7gKpGZo',
-    // users: {
-    //     id: {
-    //         assistanThread: 'thread_QK4AdSHi7R5JU5T94kx56iDG'
-    //     }
-    // }
-
     'Neo': 'asst_dImrOqcDv0welHSgnmW1Gjrv',
+    'Entrenador': 'asst_Y5sJ08pEWKWyrb4ymCitjAIG'
 };
 
 app.post('/chat', async (req, res) => {

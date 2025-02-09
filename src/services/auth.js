@@ -1,8 +1,8 @@
 const authSvc = {};
 const { createClient } = require('@supabase/supabase-js');
 
-const supabaseUrl = 'https://xqottirsikspzaraikuf.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhxb3R0aXJzaWtzcHphcmFpa3VmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mjk2NTg1MzEsImV4cCI6MjA0NTIzNDUzMX0._RqG_oFe6r3VRDikcuyvc4ExYXtQI57tsBOhI1zI-FQ';
+const supabaseUrl = 'https://vpxpkpyajjkxkymeqysg.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZweHBrcHlhampreGt5bWVxeXNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkwODM3ODIsImV4cCI6MjA1NDY1OTc4Mn0.U-CU7PNB5KbuY6okjlH2EHEH5zw23k6co0da4tuDLyM';
 
 let supabase;
 
