@@ -6,7 +6,10 @@ const auxFns = require('../services/auxFns.js');
 
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
+    defaultHeaders: {"OpenAI-Beta": "assistants=v2"}
 });
+
+const apiKey = process.env.OPENAI_API_KEY;
 
 const assistans = {
     'Salud Mental': 'asst_5bkJFTvr5adbPaMBTTYlwK4C',
@@ -113,6 +116,57 @@ app.post('/getAllMessages', async (req, res) => {
     console.log('Final messages: ', messages);
 
     res.status(200).json(messages);
+});
+
+app.get('/realtime-token', async (req, res) => {
+    try {
+        const response = await fetch(
+          "https://api.openai.com/v1/realtime/sessions",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: "gpt-4o-realtime-preview-2024-12-17",
+              voice: "verse",
+            }),
+          },
+        );
+    
+        const data = await response.json();
+        res.json(data);
+      } catch (error) {
+        console.error("Token generation error:", error);
+        res.status(500).json({ error: "Failed to generate token" });
+      }
+});
+
+app.post('/realtime-msg', async (req, res) => {
+    try {
+        const { offer, EPHEMERAL_KEY } = req.body;
+        const baseUrl = "https://api.openai.com/v1/realtime";
+        const model = "gpt-4o-realtime-preview-2024-12-17";
+
+        const response = await fetch(
+            `${baseUrl}?model=${model}`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${EPHEMERAL_KEY}`,
+              "Content-Type": "application/sdp",
+            },
+            body: offer.sdp,
+          },
+        );
+        
+        const data = await response.text();
+        res.send(data);
+      } catch (error) {
+        console.error("Token generation error:", error);
+        res.status(500).json({ error: "Failed to generate token" });
+      }
 });
 
 module.exports = app;
