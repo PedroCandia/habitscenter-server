@@ -169,4 +169,32 @@ app.post('/realtime-msg', async (req, res) => {
       }
 });
 
+const speech = require('@google-cloud/speech');
+
+process.env.GOOGLE_APPLICATION_CREDENTIALS='speechtotextgoogle.json';
+
+app.post('/voice-recorder-to-text', async (req, res) => {
+    try {
+        const client = new speech.SpeechClient();
+        const audio = req.body.audio; // Audio en Base64
+
+        const request = {
+            audio: { content: audio },
+            config: { encoding: 'WEBM_OPUS', sampleRateHertz: 48000, languageCode: 'es-ES' }
+        };
+
+        const [response] = await client.recognize(request);
+        console.log('resp client recognize: ', response);
+
+        const transcription = response.results.map(r => r.alternatives[0].transcript).join('\n');
+        
+        console.log('transcription: ', transcription);
+        
+        res.json({ transcription });   
+    } catch (error) {
+        console.error('Error en reconocimiento de voz:', error);
+        return res.status(500).json({ error: 'Error procesando el audio' });
+    }
+});
+
 module.exports = app;
