@@ -170,8 +170,7 @@ app.post('/realtime-msg', async (req, res) => {
 });
 
 const speech = require('@google-cloud/speech');
-process.env.GOOGLE_APPLICATION_CREDENTIALS;
-// process.env.GOOGLE_APPLICATION_CREDENTIALS='speechtotextgoogle.json';
+process.env.GOOGLE_APPLICATION_CREDENTIALS='speechtotextgoogle.json';
 
 app.post('/voice-recorder-to-text', async (req, res) => {
     try {
