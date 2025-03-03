@@ -180,7 +180,7 @@ const path = require('path');
 app.post('/voice-recorder-to-text', async (req, res) => {
     try {
         const client = new speech.SpeechClient();
-        const audio = req.body.audio; // Audio en Base64
+        const { audio, mimeType } = req.body; // Audio en Base64
 
         console.log("Formato recibido:", mimeType);
 
