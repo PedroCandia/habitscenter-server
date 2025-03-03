@@ -172,14 +172,36 @@ app.post('/realtime-msg', async (req, res) => {
 const speech = require('@google-cloud/speech');
 process.env.GOOGLE_APPLICATION_CREDENTIALS='speechtotextgoogle.json';
 
+// indispensable para convertir acc a web
+const fs = require('fs');
+const ffmpeg = require('fluent-ffmpeg');
+const path = require('path');
+
 app.post('/voice-recorder-to-text', async (req, res) => {
     try {
         const client = new speech.SpeechClient();
         const audio = req.body.audio; // Audio en Base64
 
+        console.log("Formato recibido:", mimeType);
+
+        let finalAudio = audio;
+        let finalMimeType = mimeType;
+
+        // 🟢 Si el audio es AAC, lo convertimos a WebM Opus
+        if (mimeType === 'audio/aac') {
+            console.log("Convirtiendo AAC a WebM Opus...");
+            finalAudio = await convertAACtoWebM(audio);
+            finalMimeType = 'audio/webm;codecs=opus'; // Ahora es WebM Opus
+        }
+
+        // 🔹 Enviar a Google Speech-to-Text
         const request = {
-            audio: { content: audio },
-            config: { encoding: 'WEBM_OPUS', sampleRateHertz: 48000, languageCode: 'es-ES' }
+            audio: { content: finalAudio },
+            config: {
+                encoding: 'WEBM_OPUS',
+                sampleRateHertz: 48000,
+                languageCode: 'es-ES',
+            },
         };
 
         const [response] = await client.recognize(request);
@@ -195,5 +217,32 @@ app.post('/voice-recorder-to-text', async (req, res) => {
         return res.status(500).json({ error: 'Error procesando el audio' });
     }
 });
+
+// 🛠 Función para convertir AAC a WebM Opus con FFmpeg
+async function convertAACtoWebM(base64Audio) {
+    return new Promise((resolve, reject) => {
+        const inputPath = path.join(__dirname, 'temp', 'input.aac');
+        const outputPath = path.join(__dirname, 'temp', 'output.webm');
+
+        // Guarda el Base64 en un archivo temporal
+        fs.writeFileSync(inputPath, Buffer.from(base64Audio, 'base64'));
+
+        ffmpeg(inputPath)
+            .toFormat('webm')
+            .audioCodec('libopus')
+            .on('end', () => {
+                console.log("Conversión completada.");
+                const outputAudio = fs.readFileSync(outputPath).toString('base64');
+                fs.unlinkSync(inputPath); // Borra archivos temporales
+                fs.unlinkSync(outputPath);
+                resolve(outputAudio);
+            })
+            .on('error', (err) => {
+                console.error("Error en conversión FFmpeg:", err);
+                reject(err);
+            })
+            .save(outputPath);
+    });
+}
 
 module.exports = app;
